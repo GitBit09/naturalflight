@@ -3,640 +3,579 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NaturalFlight — LLM Drone Mission Planner</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>NaturalFlight — Mission Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Bebas+Neue&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0c10;
-    --surface: #111318;
-    --surface2: #181c24;
-    --border: #1e2330;
-    --accent: #00e5ff;
-    --accent2: #7c3aed;
-    --green: #00ff88;
-    --orange: #ff6b35;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --danger: #ef4444;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 24px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Header */
-  header {
-    padding: 24px 0 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-  }
-
-  .logo-text {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-  }
-
-  .logo-text span { color: var(--accent); }
-
-  .badge {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    background: rgba(0,229,255,0.1);
-    border: 1px solid rgba(0,229,255,0.2);
-    color: var(--accent);
-    padding: 4px 10px;
-    border-radius: 20px;
-    letter-spacing: 1px;
-  }
-
-  /* Hero */
-  .hero {
-    padding: 48px 0 36px;
-    text-align: center;
-  }
-
-  .hero h1 {
-    font-size: clamp(32px, 5vw, 56px);
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -2px;
-    margin-bottom: 16px;
-  }
-
-  .hero h1 .line2 { color: var(--accent); }
-
-  .hero p {
-    color: var(--muted);
-    font-size: 16px;
-    max-width: 520px;
-    margin: 0 auto 36px;
-    line-height: 1.6;
-  }
-
-  /* Example chips */
-  .examples {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-bottom: 36px;
-  }
-
-  .chip {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 6px 14px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .chip:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(0,229,255,0.05);
-  }
-
-  /* Input area */
-  .input-section {
-    max-width: 720px;
-    margin: 0 auto 48px;
-  }
-
-  .input-wrapper {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    transition: border-color 0.3s;
-  }
-
-  .input-wrapper:focus-within {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
-  }
-
-  textarea {
-    width: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    font-size: 15px;
-    padding: 20px 24px 8px;
-    resize: none;
-    min-height: 80px;
-    line-height: 1.6;
-  }
-
-  textarea::placeholder { color: var(--muted); }
-
-  .input-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px 12px;
-  }
-
-  .char-count {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .plan-btn {
-    background: linear-gradient(135deg, var(--accent), #0099bb);
-    border: none;
-    color: #000;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 10px 24px;
-    border-radius: 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
-    letter-spacing: 0.3px;
-  }
-
-  .plan-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,229,255,0.3); }
-  .plan-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  .spinner {
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(0,0,0,0.3);
-    border-top-color: #000;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    display: none;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Results layout */
-  .results {
-    display: none;
-    gap: 20px;
-    margin-bottom: 48px;
-    animation: fadeUp 0.5s ease;
-  }
-
-  .results.visible { display: grid; grid-template-columns: 1fr 1fr; }
-
-  @media(max-width: 900px) { .results.visible { grid-template-columns: 1fr; } }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Panel */
-  .panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-
-  .panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface2);
-  }
-
-  .panel-title {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1.5px;
-    color: var(--muted);
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .panel-title .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 6px var(--accent);
-  }
-
-  .panel-body { padding: 20px; }
-
-  /* Mission map canvas */
-  #missionCanvas {
-    width: 100%;
-    background: #0d1117;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    display: block;
-    cursor: crosshair;
-  }
-
-  /* Stats row */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-top: 16px;
-  }
-
-  .stat-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    text-align: center;
-  }
-
-  .stat-value {
-    font-family: 'Space Mono', monospace;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 2px;
-  }
-
-  .stat-label {
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-
-  /* Mission info */
-  .mission-type-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 14px;
-  }
-
-  .type-survey { background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3); color: var(--accent); }
-  .type-delivery { background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--green); }
-  .type-inspection { background: rgba(255,107,53,0.1); border: 1px solid rgba(255,107,53,0.3); color: var(--orange); }
-  .type-search_rescue { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
-  .type-formation { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); color: #a78bfa; }
-  .type-patrol { background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2); color: var(--accent); }
-
-  .summary-text {
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.7;
-    margin-bottom: 18px;
-  }
-
-  /* Safety checks */
-  .safety-list { list-style: none; }
-  .safety-list li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    color: var(--muted);
-  }
-  .safety-list li:last-child { border-bottom: none; }
-  .safety-list li::before {
-    content: '✓';
-    color: var(--green);
-    font-weight: 700;
-    font-family: 'Space Mono', monospace;
-    flex-shrink: 0;
-  }
-
-  /* Waypoints table */
-  .wp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .wp-table th {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 1px;
-    color: var(--muted);
-    text-transform: uppercase;
-    padding: 8px 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-  .wp-table td {
-    padding: 9px 10px;
-    border-bottom: 1px solid rgba(30,35,48,0.5);
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-  }
-  .wp-table tr:last-child td { border-bottom: none; }
-  .wp-table tr:hover td { background: rgba(0,229,255,0.03); }
-
-  .action-badge {
-    font-size: 9px;
-    padding: 2px 8px;
-    border-radius: 10px;
-    letter-spacing: 0.5px;
-  }
-  .action-TAKEOFF { background: rgba(0,255,136,0.15); color: var(--green); }
-  .action-WAYPOINT { background: rgba(0,229,255,0.15); color: var(--accent); }
-  .action-LAND { background: rgba(255,107,53,0.15); color: var(--orange); }
-  .action-RTH { background: rgba(239,68,68,0.15); color: var(--danger); }
-  .action-HOVER { background: rgba(124,58,237,0.15); color: #a78bfa; }
-
-  /* Code panel — full width */
-  .code-panel { grid-column: 1 / -1; }
-
-  .code-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .copy-btn {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    padding: 4px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  pre {
-    background: #0d1117;
-    border-radius: 10px;
-    padding: 20px;
-    overflow-x: auto;
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    line-height: 1.7;
-    color: #c9d1d9;
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid var(--border);
-  }
-
-  /* Syntax highlighting */
-  .kw { color: #ff7b72; }
-  .fn { color: #d2a8ff; }
-  .str { color: #a5d6ff; }
-  .cm { color: #8b949e; font-style: italic; }
-  .num { color: #79c0ff; }
-
-  /* Error state */
-  .error-box {
-    background: rgba(239,68,68,0.1);
-    border: 1px solid rgba(239,68,68,0.3);
-    border-radius: 10px;
-    padding: 16px 20px;
-    color: var(--danger);
-    font-size: 13px;
-    display: none;
-    margin-bottom: 20px;
-  }
-
-  /* Loading state */
-  .loading-overlay {
-    display: none;
-    text-align: center;
-    padding: 48px 0;
-  }
-
-  .loading-overlay.visible { display: block; }
-
-  .radar {
-    width: 80px;
-    height: 80px;
-    border: 2px solid var(--border);
-    border-radius: 50%;
-    margin: 0 auto 20px;
-    position: relative;
-    animation: radar-pulse 2s ease-in-out infinite;
-  }
-
-  .radar::before {
-    content: '';
-    position: absolute;
-    inset: 8px;
-    border-radius: 50%;
-    border: 1px solid rgba(0,229,255,0.2);
-  }
-
-  .radar::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 50%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent));
-    transform-origin: left center;
-    animation: radar-sweep 1.5s linear infinite;
-  }
-
-  @keyframes radar-sweep { to { transform: rotate(360deg); } }
-  @keyframes radar-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(0,229,255,0.2); } 50% { box-shadow: 0 0 0 16px rgba(0,229,255,0); } }
-
-  .loading-text {
-    font-family: 'Space Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
-
-  .loading-steps {
-    margin-top: 12px;
-    font-size: 12px;
-    color: var(--accent);
-    font-family: 'Space Mono', monospace;
-  }
-
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+:root {
+  --bg: #060708;
+  --bg2: #0c0e11;
+  --bg3: #111419;
+  --line: #1c2028;
+  --line2: #252a34;
+  --fg: #c8d0dc;
+  --fg2: #7a8494;
+  --fg3: #3d4452;
+  --amber: #f5a623;
+  --amber-dim: rgba(245,166,35,0.12);
+  --amber-glow: rgba(245,166,35,0.06);
+  --green: #2ecc71;
+  --green-dim: rgba(46,204,113,0.1);
+  --red: #e74c3c;
+  --red-dim: rgba(231,76,60,0.1);
+  --blue: #3b8eea;
+  --blue-dim: rgba(59,142,234,0.1);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 48px;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 24px; }
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--amber);
+  text-shadow: 0 0 20px rgba(245,166,35,0.4);
+}
+
+.topbar-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--fg3);
+  text-transform: uppercase;
+  border-left: 1px solid var(--line2);
+  padding-left: 24px;
+}
+
+.topbar-right { display: flex; align-items: center; gap: 20px; }
+
+.status-dot {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; color: var(--fg3);
+}
+.status-dot::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.sys-time {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--fg3); letter-spacing: 1px;
+}
+
+/* LAYOUT */
+.shell {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: calc(100vh - 48px);
+  position: relative;
+  z-index: 1;
+}
+
+/* SIDEBAR */
+.sidebar {
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  border-bottom: 1px solid var(--line);
+  padding: 20px 22px;
+}
+
+.sec-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px;
+  color: var(--fg3); text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-label::before {
+  content: ''; display: inline-block;
+  width: 12px; height: 1px; background: var(--amber);
+}
+
+.mission-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: 3px;
+  color: var(--fg);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px; line-height: 1.75;
+  padding: 12px;
+  resize: none; outline: none;
+  min-height: 110px;
+  transition: border-color 0.2s;
+}
+.mission-input::placeholder { color: var(--fg3); font-style: italic; }
+.mission-input:focus { border-color: var(--amber); background: var(--bg3); }
+
+.input-meta {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-top: 6px;
+}
+.char-ct { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--fg3); }
+
+.exec-btn {
+  width: 100%; margin-top: 12px;
+  background: var(--amber); border: none;
+  color: #000;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px; letter-spacing: 3px;
+  padding: 11px;
+  cursor: pointer; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.15s;
+  position: relative; overflow: hidden;
+}
+.exec-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+}
+.exec-btn:hover::before { transform: translateX(100%); }
+.exec-btn:hover { box-shadow: 0 0 28px rgba(245,166,35,0.45); }
+.exec-btn:disabled { background: var(--fg3); cursor: not-allowed; box-shadow: none; }
+
+.exec-spinner {
+  width: 13px; height: 13px;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.quick-list { display: flex; flex-direction: column; gap: 5px; }
+.quick-item {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--fg2);
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  cursor: pointer; line-height: 1.4;
+  transition: all 0.15s;
+  background: var(--bg2);
+}
+.quick-item:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-glow); }
+.quick-item::before { content: '> '; color: var(--fg3); }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.stat-box {
+  background: var(--bg2); border: 1px solid var(--line);
+  padding: 10px 12px; border-radius: 2px;
+}
+.stat-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 21px; color: var(--amber);
+  letter-spacing: 1px; line-height: 1;
+}
+.stat-lbl {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px; letter-spacing: 1.5px;
+  color: var(--fg3); text-transform: uppercase; margin-top: 3px;
+}
+
+.check-list { display: flex; flex-direction: column; gap: 6px; }
+.check-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; color: var(--fg2); line-height: 1.5;
+}
+.check-icon { color: var(--green); flex-shrink: 0; margin-top: 1px; }
+
+/* MAIN */
+.main { display: flex; flex-direction: column; overflow-y: auto; }
+
+.hero-strip {
+  border-bottom: 1px solid var(--line);
+  padding: 36px 36px 28px;
+  position: relative; overflow: hidden;
+}
+.hero-strip::before {
+  content: 'NATURALFLIGHT';
+  position: absolute; right: -10px; top: -8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 110px; color: rgba(245,166,35,0.025);
+  letter-spacing: 8px; pointer-events: none; user-select: none;
+}
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 3px;
+  color: var(--amber); text-transform: uppercase; margin-bottom: 10px;
+}
+.hero-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px,5vw,64px);
+  line-height: 0.95; letter-spacing: 2px;
+  color: var(--fg); margin-bottom: 12px;
+}
+.hero-title em { color: var(--amber); font-style: normal; }
+.hero-sub { font-size: 13px; color: var(--fg2); max-width: 460px; line-height: 1.7; }
+
+.err-box {
+  display: none;
+  background: var(--red-dim);
+  border: 1px solid rgba(231,76,60,0.3);
+  border-radius: 2px;
+  padding: 11px 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--red);
+  margin: 16px 32px;
+}
+
+.loading-wrap {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 0; gap: 18px;
+}
+.loading-wrap.visible { display: flex; }
+
+.radar-ring { position: relative; width: 68px; height: 68px; }
+.radar-ring svg { animation: spin 3s linear infinite; }
+.radar-ring::after {
+  content: '◈';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--amber);
+}
+.loading-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--fg3); text-transform: uppercase;
+}
+.loading-step {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--amber); letter-spacing: 1px;
+}
+
+/* RESULTS */
+.results { display: none; }
+.results.visible { display: block; animation: slideIn 0.4s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+.summary-block {
+  font-size: 13px; color: var(--fg2); line-height: 1.8;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--line);
+  font-style: italic;
+}
+
+.map-section { padding: 22px 32px; border-bottom: 1px solid var(--line); }
+
+.section-header {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px;
+  color: var(--fg3); text-transform: uppercase;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::before { content:''; width:16px; height:1px; background:var(--amber); }
+
+.mission-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 2px;
+}
+.badge-survey    { background:var(--blue-dim);  color:var(--blue);  border:1px solid rgba(59,142,234,0.2); }
+.badge-delivery  { background:var(--green-dim); color:var(--green); border:1px solid rgba(46,204,113,0.2); }
+.badge-inspection{ background:var(--amber-dim); color:var(--amber); border:1px solid rgba(245,166,35,0.2); }
+.badge-search_rescue{background:var(--red-dim); color:var(--red);   border:1px solid rgba(231,76,60,0.2); }
+.badge-formation { background:var(--blue-dim);  color:var(--blue);  border:1px solid rgba(59,142,234,0.2); }
+.badge-patrol    { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(245,166,35,0.2); }
+
+.canvas-wrap {
+  position: relative;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 3px; overflow: hidden;
+}
+.canvas-wrap::before {
+  content: 'NO MISSION LOADED';
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; color: var(--fg3);
+  pointer-events: none;
+}
+.canvas-wrap.has-data::before { display: none; }
+.canvas-wrap::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right,var(--amber) 10px,transparent 10px) top left/10px 1px no-repeat,
+    linear-gradient(to bottom,var(--amber) 10px,transparent 10px) top left/1px 10px no-repeat,
+    linear-gradient(to left,var(--amber) 10px,transparent 10px) bottom right/10px 1px no-repeat,
+    linear-gradient(to top,var(--amber) 10px,transparent 10px) bottom right/1px 10px no-repeat;
+  pointer-events: none; opacity: 0.4;
+}
+#missionCanvas { width: 100%; display: block; }
+
+.wp-section { padding: 20px 32px; border-bottom: 1px solid var(--line); }
+.wp-table { width: 100%; border-collapse: collapse; }
+.wp-table th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px; letter-spacing: 2px; color: var(--fg3);
+  text-transform: uppercase; padding: 8px 10px;
+  text-align: left; border-bottom: 1px solid var(--line);
+}
+.wp-table td {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; color: var(--fg2);
+  padding: 8px 10px; border-bottom: 1px solid var(--line);
+}
+.wp-table tr:hover td { background: var(--amber-glow); color: var(--fg); }
+.wp-table td:first-child { color: var(--amber); font-weight: 600; }
+
+.act-tag { font-size: 8px; letter-spacing: 1px; padding: 2px 7px; border-radius: 2px; }
+.act-TAKEOFF  { background:var(--green-dim);              color:var(--green); }
+.act-WAYPOINT { background:var(--blue-dim);               color:var(--blue);  }
+.act-LAND     { background:var(--amber-dim);              color:var(--amber); }
+.act-RTH      { background:var(--red-dim);                color:var(--red);   }
+.act-HOVER    { background:rgba(155,89,182,0.1);          color:#9b59b6; }
+
+.code-section { padding: 22px 32px 36px; }
+.code-header {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 12px;
+}
+.copy-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; color: var(--fg3);
+  background: var(--bg2); border: 1px solid var(--line2);
+  padding: 5px 14px; border-radius: 2px;
+  cursor: pointer; text-transform: uppercase; transition: all 0.15s;
+}
+.copy-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+pre {
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: 3px; padding: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; line-height: 1.8; color: var(--fg2);
+  overflow: auto; max-height: 360px;
+}
+
+.kw  { color: #e06c75; }
+.fn  { color: #61afef; }
+.str { color: #98c379; }
+.cm  { color: var(--fg3); font-style: italic; }
+.num { color: #d19a66; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--line); }
+  .hero-strip, .map-section, .wp-section, .code-section { padding-left: 20px; padding-right: 20px; }
+  .err-box { margin-left: 20px; margin-right: 20px; }
+  .summary-block { padding-left: 20px; padding-right: 20px; }
+  .topbar-tag { display: none; }
+}
 </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <div class="logo">
-      <div class="logo-icon">🚁</div>
-      <div class="logo-text">Natural<span>Flight</span></div>
-    </div>
-    <div class="badge">LLM MISSION PLANNER</div>
-  </header>
-
-  <div class="hero">
-    <h1>
-      Describe your mission.<br>
-      <span class="line2">We'll generate the code.</span>
-    </h1>
-    <p>Powered by Claude AI — turn plain English drone missions into executable MAVLink flight plans with waypoints, safety checks, and Python code.</p>
-
-    <div class="examples">
-      <div class="chip" onclick="setExample(this)">Survey a 200×200m crop field in a lawnmower pattern at 30m altitude</div>
-      <div class="chip" onclick="setExample(this)">Deliver a package to coordinates 50m north, 30m east, then return home</div>
-      <div class="chip" onclick="setExample(this)">Inspect a 100m communication tower at multiple altitudes</div>
-      <div class="chip" onclick="setExample(this)">Search a 500m radius area for a missing person using spiral pattern</div>
-      <div class="chip" onclick="setExample(this)">Patrol the perimeter of a 150×80m warehouse at night</div>
-    </div>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">NaturalFlight</div>
+    <div class="topbar-tag">Autonomous Mission Planner · Groq LLM · MAVLink</div>
   </div>
-
-  <div class="input-section">
-    <div class="input-wrapper">
-      <textarea id="missionInput" placeholder="Describe your drone mission in plain English… e.g. 'Survey a 300×300 meter agricultural field in a grid pattern at 25 meters altitude, capture photos every 5 meters'" rows="3" oninput="updateCount()"></textarea>
-      <div class="input-footer">
-        <span class="char-count" id="charCount">0 / 500</span>
-        <button class="plan-btn" id="planBtn" onclick="planMission()">
-          <div class="spinner" id="spinner"></div>
-          <span id="btnText">⚡ Generate Mission</span>
-        </button>
-      </div>
-    </div>
+  <div class="topbar-right">
+    <div class="status-dot">SYSTEM ONLINE</div>
+    <div class="sys-time" id="sysTime">--:--:-- UTC</div>
   </div>
+</div>
 
-  <div class="error-box" id="errorBox"></div>
+<div class="shell">
 
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="radar"></div>
-    <div class="loading-text">PLANNING MISSION</div>
-    <div class="loading-steps" id="loadingStep">Parsing mission parameters...</div>
-  </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
 
-  <div class="results" id="results">
-    <!-- Left col: Map + Stats -->
-    <div>
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title"><div class="dot"></div>FLIGHT PATH VISUALIZATION</div>
-        </div>
-        <div class="panel-body">
-          <canvas id="missionCanvas" height="300"></canvas>
-          <div class="stats-row" id="statsRow"></div>
-        </div>
+    <div class="sidebar-section">
+      <div class="sec-label">Mission Brief</div>
+      <textarea
+        class="mission-input"
+        id="missionInput"
+        placeholder="Describe mission in plain English…&#10;e.g. Survey 200×200m field at 30m alt"
+        oninput="updateCount()"
+      ></textarea>
+      <div class="input-meta">
+        <span class="char-ct" id="charCount">0 / 500</span>
+        <span class="char-ct">Ctrl+Enter to run</span>
+      </div>
+      <button class="exec-btn" id="planBtn" onclick="planMission()">
+        <div class="exec-spinner" id="spinner"></div>
+        <span id="btnText">▶ EXECUTE PLAN</span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sec-label">Quick Load</div>
+      <div class="quick-list">
+        <div class="quick-item" onclick="setExample(this)">Survey 200×200m crop field, lawnmower, 30m alt</div>
+        <div class="quick-item" onclick="setExample(this)">Deliver package 50m north 30m east, RTH</div>
+        <div class="quick-item" onclick="setExample(this)">Inspect 100m comm tower at multiple altitudes</div>
+        <div class="quick-item" onclick="setExample(this)">Search 500m radius for missing person, spiral</div>
+        <div class="quick-item" onclick="setExample(this)">Patrol perimeter 150×80m warehouse, night</div>
       </div>
     </div>
 
-    <!-- Right col: Info + Waypoints -->
-    <div style="display:flex;flex-direction:column;gap:20px;">
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title"><div class="dot"></div>MISSION BRIEF</div>
-        </div>
-        <div class="panel-body" id="missionBrief"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title"><div class="dot"></div>WAYPOINTS</div>
-          <span id="wpCount" style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)"></span>
-        </div>
-        <div class="panel-body" style="padding:0 0 8px;">
-          <div id="waypointsTable"></div>
-        </div>
-      </div>
+    <div class="sidebar-section" id="statsSection" style="display:none">
+      <div class="sec-label">Telemetry</div>
+      <div class="stat-grid" id="statsGrid"></div>
     </div>
 
-    <!-- Full width: Code -->
-    <div class="panel code-panel">
-      <div class="panel-header">
-        <div class="panel-title"><div class="dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></div>GENERATED FLIGHT CODE</div>
-        <button class="copy-btn" onclick="copyCode()">COPY CODE</button>
+    <div class="sidebar-section" id="safetySection" style="display:none">
+      <div class="sec-label">Safety Checks</div>
+      <div class="check-list" id="checkList"></div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <div class="hero-strip">
+      <div class="hero-eyebrow">// autonomous drone ops · llm-powered · mavlink</div>
+      <h1 class="hero-title">Plain English<br><em>Flight Plans.</em></h1>
+      <p class="hero-sub">Describe your mission. Get MAVLink waypoints, safety checks, and executable Python code — instantly.</p>
+    </div>
+
+    <div class="err-box" id="errorBox"></div>
+
+    <div class="loading-wrap" id="loadingWrap">
+      <div class="radar-ring">
+        <svg width="68" height="68" viewBox="0 0 68 68">
+          <circle cx="34" cy="34" r="28" fill="none" stroke="#1c2028" stroke-width="1"/>
+          <circle cx="34" cy="34" r="18" fill="none" stroke="#1c2028" stroke-width="1"/>
+          <path d="M34 6 A28 28 0 0 1 62 34" fill="none" stroke="#f5a623" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
       </div>
-      <div class="panel-body">
+      <div class="loading-label">Planning Mission</div>
+      <div class="loading-step" id="loadingStep">Parsing parameters...</div>
+    </div>
+
+    <div class="results" id="results">
+
+      <div class="summary-block" id="summaryBlock"></div>
+
+      <div class="map-section">
+        <div class="section-header">
+          <div class="section-title">Flight Path Visualization</div>
+          <div id="missionTypeBadge"></div>
+        </div>
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="missionCanvas" height="280"></canvas>
+        </div>
+      </div>
+
+      <div class="wp-section">
+        <div class="section-header">
+          <div class="section-title">Waypoints</div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--fg3);letter-spacing:1px" id="wpCount"></span>
+        </div>
+        <table class="wp-table">
+          <thead>
+            <tr><th>#</th><th>Label</th><th>X (m)</th><th>Y (m)</th><th>Alt</th><th>Speed</th><th>Action</th></tr>
+          </thead>
+          <tbody id="wpBody"></tbody>
+        </table>
+      </div>
+
+      <div class="code-section">
+        <div class="code-header">
+          <div class="section-title">Generated Flight Code</div>
+          <button class="copy-btn" onclick="copyCode()">COPY</button>
+        </div>
         <pre id="codeBlock"></pre>
       </div>
-    </div>
-  </div>
 
+    </div>
+  </main>
 </div>
 
 <script>
 let currentMission = null;
 
-function setExample(chip) {
-  document.getElementById('missionInput').value = chip.textContent;
+function updateClock() {
+  const n = new Date();
+  const p = x => String(x).padStart(2,'0');
+  document.getElementById('sysTime').textContent =
+    p(n.getUTCHours())+':'+p(n.getUTCMinutes())+':'+p(n.getUTCSeconds())+' UTC';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function setExample(el) {
+  document.getElementById('missionInput').value = el.textContent.trim();
   updateCount();
+  document.getElementById('missionInput').focus();
 }
 
 function updateCount() {
-  const val = document.getElementById('missionInput').value;
-  document.getElementById('charCount').textContent = val.length + ' / 500';
+  const v = document.getElementById('missionInput').value;
+  document.getElementById('charCount').textContent = v.length + ' / 500';
 }
 
-const loadingMessages = [
+const STEPS = [
   'Parsing mission parameters...',
   'Computing optimal waypoints...',
   'Running safety validation...',
-  'Generating MAVLink commands...',
+  'Generating MAVLink sequence...',
   'Compiling flight code...'
 ];
 
@@ -644,20 +583,20 @@ async function planMission() {
   const desc = document.getElementById('missionInput').value.trim();
   if (!desc) return;
 
-  // UI state
   document.getElementById('planBtn').disabled = true;
   document.getElementById('spinner').style.display = 'block';
-  document.getElementById('btnText').textContent = 'Planning...';
+  document.getElementById('btnText').textContent = 'PROCESSING...';
   document.getElementById('results').classList.remove('visible');
   document.getElementById('errorBox').style.display = 'none';
-  document.getElementById('loadingOverlay').classList.add('visible');
+  document.getElementById('loadingWrap').classList.add('visible');
+  document.getElementById('statsSection').style.display = 'none';
+  document.getElementById('safetySection').style.display = 'none';
 
-  // Cycle loading messages
-  let msgIdx = 0;
-  const msgInterval = setInterval(() => {
-    msgIdx = (msgIdx + 1) % loadingMessages.length;
-    document.getElementById('loadingStep').textContent = loadingMessages[msgIdx];
-  }, 1200);
+  let si = 0;
+  const iv = setInterval(() => {
+    si = (si+1) % STEPS.length;
+    document.getElementById('loadingStep').textContent = STEPS[si];
+  }, 1100);
 
   try {
     const resp = await fetch('/plan', {
@@ -666,213 +605,183 @@ async function planMission() {
       body: JSON.stringify({description: desc})
     });
     const data = await resp.json();
-
     if (!data.success) throw new Error(data.error);
-
     currentMission = data.mission;
-    renderMission(currentMission);
-
+    renderMission(data.mission);
   } catch(e) {
-    document.getElementById('errorBox').textContent = '⚠ ' + (e.message || 'Failed to generate mission. Please try again.');
+    document.getElementById('errorBox').textContent = '⚠ ERROR // ' + (e.message || 'Mission planning failed.');
     document.getElementById('errorBox').style.display = 'block';
   } finally {
-    clearInterval(msgInterval);
+    clearInterval(iv);
     document.getElementById('planBtn').disabled = false;
     document.getElementById('spinner').style.display = 'none';
-    document.getElementById('btnText').textContent = '⚡ Generate Mission';
-    document.getElementById('loadingOverlay').classList.remove('visible');
+    document.getElementById('btnText').textContent = '▶ EXECUTE PLAN';
+    document.getElementById('loadingWrap').classList.remove('visible');
   }
 }
 
 function renderMission(m) {
-  // Mission brief
-  const typeClass = 'type-' + (m.mission_type || 'survey');
-  document.getElementById('missionBrief').innerHTML = `
-    <div class="mission-type-badge ${typeClass}">
-      ${getMissionIcon(m.mission_type)} ${(m.mission_type || 'MISSION').toUpperCase()}
-    </div>
-    <p class="summary-text">${m.summary}</p>
-    <ul class="safety-list">
-      ${(m.safety_checks || []).map(s => `<li>${s}</li>`).join('')}
-    </ul>
-  `;
+  document.getElementById('summaryBlock').textContent = m.summary;
 
-  // Stats
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-value">${m.estimated_time || '--'}</div>
-      <div class="stat-label">Est. Duration</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${m.estimated_battery || '--'}</div>
-      <div class="stat-label">Battery Use</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">${m.max_altitude || '--'}</div>
-      <div class="stat-label">Max Altitude</div>
-    </div>
-  `;
+  const t = m.mission_type || 'survey';
+  document.getElementById('missionTypeBadge').innerHTML =
+    `<span class="mission-badge badge-${t}">${getMissionIcon(t)} ${t.replace('_',' ').toUpperCase()}</span>`;
 
-  // Waypoints
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-box"><div class="stat-val">${m.estimated_time||'--'}</div><div class="stat-lbl">Duration</div></div>
+    <div class="stat-box"><div class="stat-val">${m.estimated_battery||'--'}</div><div class="stat-lbl">Battery</div></div>
+    <div class="stat-box"><div class="stat-val">${m.max_altitude||'--'}</div><div class="stat-lbl">Max Alt</div></div>
+    <div class="stat-box"><div class="stat-val">${(m.waypoints||[]).length}</div><div class="stat-lbl">Waypoints</div></div>
+  `;
+  document.getElementById('statsSection').style.display = 'block';
+
+  document.getElementById('checkList').innerHTML = (m.safety_checks||[]).map(s =>
+    `<div class="check-item"><span class="check-icon">✓</span><span>${s}</span></div>`
+  ).join('');
+  document.getElementById('safetySection').style.display = 'block';
+
   const wps = m.waypoints || [];
-  document.getElementById('wpCount').textContent = wps.length + ' waypoints';
-  document.getElementById('waypointsTable').innerHTML = `
-    <table class="wp-table">
-      <thead><tr>
-        <th>#</th><th>Label</th><th>X (m)</th><th>Y (m)</th><th>Alt</th><th>Speed</th><th>Action</th>
-      </tr></thead>
-      <tbody>
-        ${wps.map(wp => `
-          <tr>
-            <td>${wp.id}</td>
-            <td>${wp.label}</td>
-            <td>${wp.x}</td>
-            <td>${wp.y}</td>
-            <td>${wp.alt}m</td>
-            <td>${wp.speed}m/s</td>
-            <td><span class="action-badge action-${wp.action}">${wp.action}</span></td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
+  document.getElementById('wpCount').textContent = wps.length + ' WAYPOINTS';
+  document.getElementById('wpBody').innerHTML = wps.map(wp => `
+    <tr>
+      <td>${String(wp.id).padStart(2,'0')}</td>
+      <td>${wp.label}</td>
+      <td>${wp.x}</td>
+      <td>${wp.y}</td>
+      <td>${wp.alt}m</td>
+      <td>${wp.speed}m/s</td>
+      <td><span class="act-tag act-${wp.action}">${wp.action}</span></td>
+    </tr>
+  `).join('');
 
-  // Code
   document.getElementById('codeBlock').innerHTML = syntaxHighlight(m.code || '');
-
-  // Draw canvas
-  drawMissionMap(wps);
+  setTimeout(() => drawMap(wps), 50);
 
   document.getElementById('results').classList.add('visible');
-  document.getElementById('results').scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
-function drawMissionMap(waypoints) {
+function drawMap(waypoints) {
   const canvas = document.getElementById('missionCanvas');
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-  canvas.height = 300 * window.devicePixelRatio;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  const W = canvas.offsetWidth, H = 300;
+  const wrap = document.getElementById('canvasWrap');
+  const dpr = window.devicePixelRatio || 1;
+  const W = wrap.clientWidth, H = 280;
 
-  // Background
-  ctx.fillStyle = '#0d1117';
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = '#0c0e11';
   ctx.fillRect(0, 0, W, H);
 
-  // Grid
-  ctx.strokeStyle = 'rgba(0,229,255,0.05)';
+  ctx.strokeStyle = 'rgba(245,166,35,0.04)';
   ctx.lineWidth = 1;
-  for(let x = 0; x < W; x += 30) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-  for(let y = 0; y < H; y += 30) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  for(let x=0;x<W;x+=32){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-  if (!waypoints || waypoints.length < 2) return;
+  ctx.strokeStyle = 'rgba(245,166,35,0.03)';
+  for(let r=60;r<Math.max(W,H);r+=60){
+    ctx.beginPath();ctx.arc(W/2,H/2,r,0,Math.PI*2);ctx.stroke();
+  }
 
-  // Find bounds
-  const xs = waypoints.map(w => w.x), ys = waypoints.map(w => w.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const pad = 50;
+  if(!waypoints||waypoints.length<2){ wrap.classList.remove('has-data'); return; }
+  wrap.classList.add('has-data');
 
-  const scaleX = (maxX - minX) === 0 ? 1 : (W - pad*2) / (maxX - minX);
-  const scaleY = (maxY - minY) === 0 ? 1 : (H - pad*2) / (maxY - minY);
-  const scale = Math.min(scaleX, scaleY);
-  const offX = pad + ((W - pad*2) - (maxX - minX) * scale) / 2;
-  const offY = pad + ((H - pad*2) - (maxY - minY) * scale) / 2;
+  const xs=waypoints.map(w=>w.x), ys=waypoints.map(w=>w.y);
+  const minX=Math.min(...xs), maxX=Math.max(...xs);
+  const minY=Math.min(...ys), maxY=Math.max(...ys);
+  const pad=52, rX=(maxX-minX)||1, rY=(maxY-minY)||1;
+  const sc=Math.min((W-pad*2)/rX,(H-pad*2)/rY);
+  const ox=pad+((W-pad*2)-rX*sc)/2;
+  const oy=pad+((H-pad*2)-rY*sc)/2;
+  const tc=(x,y)=>({cx:ox+(x-minX)*sc, cy:H-(oy+(y-minY)*sc)});
 
-  const toCanvas = (x, y) => ({
-    cx: offX + (x - minX) * scale,
-    cy: H - (offY + (y - minY) * scale)
-  });
-
-  // Draw path
+  // Glow path
   ctx.beginPath();
-  ctx.strokeStyle = 'rgba(0,229,255,0.4)';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([6, 4]);
-  waypoints.forEach((wp, i) => {
-    const {cx, cy} = toCanvas(wp.x, wp.y);
-    i === 0 ? ctx.moveTo(cx, cy) : ctx.lineTo(cx, cy);
+  ctx.strokeStyle='rgba(245,166,35,0.07)';
+  ctx.lineWidth=7;
+  waypoints.forEach((wp,i)=>{
+    const{cx,cy}=tc(wp.x,wp.y);
+    i===0?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);
+  });
+  ctx.stroke();
+
+  // Dashed path
+  ctx.beginPath();
+  ctx.strokeStyle='rgba(245,166,35,0.55)';
+  ctx.lineWidth=1.5;
+  ctx.setLineDash([5,4]);
+  waypoints.forEach((wp,i)=>{
+    const{cx,cy}=tc(wp.x,wp.y);
+    i===0?ctx.moveTo(cx,cy):ctx.lineTo(cx,cy);
   });
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Altitude color mapping
-  const alts = waypoints.map(w => w.alt);
-  const minA = Math.min(...alts), maxA = Math.max(...alts);
+  waypoints.forEach((wp,i)=>{
+    const{cx,cy}=tc(wp.x,wp.y);
+    const first=i===0, last=i===waypoints.length-1;
+    const col=first?'#2ecc71':last?'#e74c3c':'#f5a623';
 
-  // Draw solid path
-  for(let i = 1; i < waypoints.length; i++) {
-    const p1 = toCanvas(waypoints[i-1].x, waypoints[i-1].y);
-    const p2 = toCanvas(waypoints[i].x, waypoints[i].y);
-    const t = maxA === minA ? 0.5 : (waypoints[i].alt - minA) / (maxA - minA);
-    const r = Math.round(0 + t * 0);
-    const g = Math.round(229 - t * 100);
-    const b = Math.round(255 - t * 50);
     ctx.beginPath();
-    ctx.strokeStyle = `rgba(${r},${g},${b},0.9)`;
-    ctx.lineWidth = 2;
-    ctx.moveTo(p1.cx, p1.cy);
-    ctx.lineTo(p2.cx, p2.cy);
-    ctx.stroke();
-  }
-
-  // Draw waypoints
-  waypoints.forEach((wp, i) => {
-    const {cx, cy} = toCanvas(wp.x, wp.y);
-    const isFirst = i === 0, isLast = i === waypoints.length - 1;
-
-    // Outer glow
-    ctx.beginPath();
-    ctx.arc(cx, cy, isFirst || isLast ? 10 : 7, 0, Math.PI*2);
-    ctx.fillStyle = isFirst ? 'rgba(0,255,136,0.15)' : isLast ? 'rgba(255,107,53,0.15)' : 'rgba(0,229,255,0.1)';
+    ctx.arc(cx,cy,first||last?13:9,0,Math.PI*2);
+    ctx.fillStyle=col+'20';
     ctx.fill();
 
-    // Node
     ctx.beginPath();
-    ctx.arc(cx, cy, isFirst || isLast ? 6 : 4, 0, Math.PI*2);
-    ctx.fillStyle = isFirst ? '#00ff88' : isLast ? '#ff6b35' : '#00e5ff';
+    ctx.arc(cx,cy,first||last?4:3,0,Math.PI*2);
+    ctx.fillStyle=col;
     ctx.fill();
 
-    // Label
-    ctx.fillStyle = 'rgba(226,232,240,0.8)';
-    ctx.font = '10px Space Mono, monospace';
-    ctx.fillText(wp.label || `WP${wp.id}`, cx + 8, cy - 6);
+    if(first||last){
+      ctx.strokeStyle=col;
+      ctx.lineWidth=0.7;
+      ctx.globalAlpha=0.35;
+      ctx.beginPath();ctx.moveTo(cx-11,cy);ctx.lineTo(cx+11,cy);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx,cy-11);ctx.lineTo(cx,cy+11);ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+
+    ctx.fillStyle='rgba(200,208,220,0.65)';
+    ctx.font='9px IBM Plex Mono, monospace';
+    ctx.fillText(wp.label||`WP${wp.id}`, cx+8, cy-6);
   });
 
-  // Home indicator
-  const home = toCanvas(waypoints[0].x, waypoints[0].y);
-  ctx.fillStyle = 'rgba(0,255,136,0.6)';
-  ctx.font = 'bold 11px Syne';
-  ctx.fillText('HOME', home.cx - 14, home.cy + 18);
+  const home=tc(waypoints[0].x,waypoints[0].y);
+  ctx.fillStyle='rgba(46,204,113,0.45)';
+  ctx.font='bold 8px IBM Plex Mono, monospace';
+  ctx.letterSpacing='1px';
+  ctx.fillText('HOME', home.cx-12, home.cy+16);
 }
 
-function getMissionIcon(type) {
-  const icons = { survey: '📡', delivery: '📦', inspection: '🔍', search_rescue: '🚨', formation: '🔷', patrol: '🛡' };
-  return icons[type] || '🚁';
+function getMissionIcon(t){
+  return {survey:'◈',delivery:'▲',inspection:'◉',search_rescue:'✦',formation:'⬡',patrol:'▣'}[t]||'◈';
 }
 
-function syntaxHighlight(code) {
+function syntaxHighlight(code){
   return code
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/(#[^\n]*)/g, '<span class="cm">$1</span>')
-    .replace(/\b(def|import|from|return|if|else|elif|for|while|in|not|and|or|True|False|None|class|try|except|with|as|pass|break|continue)\b/g, '<span class="kw">$1</span>')
-    .replace(/\b([a-z_][a-z_0-9]*)\s*(?=\()/gi, '<span class="fn">$1</span>')
-    .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g, '<span class="str">$1</span>')
-    .replace(/\b(\d+\.?\d*)\b/g, '<span class="num">$1</span>');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(#[^\n]*)/g,'<span class="cm">$1</span>')
+    .replace(/\b(def|import|from|return|if|else|elif|for|while|in|not|and|or|True|False|None|class|try|except|with|as|pass|break|continue)\b/g,'<span class="kw">$1</span>')
+    .replace(/\b([a-z_][a-z_0-9]*)\s*(?=\()/gi,'<span class="fn">$1</span>')
+    .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,'<span class="str">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g,'<span class="num">$1</span>');
 }
 
-function copyCode() {
-  if (!currentMission) return;
-  navigator.clipboard.writeText(currentMission.code).then(() => {
-    const btn = document.querySelector('.copy-btn');
-    btn.textContent = 'COPIED!';
-    setTimeout(() => btn.textContent = 'COPY CODE', 2000);
+function copyCode(){
+  if(!currentMission) return;
+  navigator.clipboard.writeText(currentMission.code).then(()=>{
+    const b=document.querySelector('.copy-btn');
+    b.textContent='COPIED';
+    setTimeout(()=>b.textContent='COPY',2000);
   });
 }
 
-// Enter to submit
-document.getElementById('missionInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.ctrlKey) planMission();
+document.getElementById('missionInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.ctrlKey) planMission();
 });
 </script>
 </body>

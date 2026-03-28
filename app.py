@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, jsonify
-import anthropic
+from groq import Groq
 import json
 import re
+import os
 
 app = Flask(__name__)
-client = anthropic.Anthropic()
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 SYSTEM_PROMPT = """You are NaturalFlight, an expert drone mission planner AI. 
 When given a plain English mission description, you:
@@ -29,7 +30,6 @@ ALWAYS respond with EXACTLY this JSON format (no markdown, no extra text):
   "max_altitude": "Xm",
   "code": "# Complete Python flight plan code here\\nimport time\\n\\ndef execute_mission():\\n    # your full code"
 }
-
 Generate realistic waypoints (x,y in meters from home, typically -200 to 200 range).
 The code should be complete, runnable pseudocode with comments."""
 
@@ -46,16 +46,16 @@ def plan_mission():
         return jsonify({'error': 'No mission description provided'}), 400
     
     try:
-        message = client.messages.create(
-            model="claude-sonnet-4-20250514",
+        message = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             max_tokens=2000,
-            system=SYSTEM_PROMPT,
             messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Plan this drone mission: {mission_description}"}
             ]
         )
         
-        response_text = message.content[0].text.strip()
+        response_text = message.choices[0].message.content.strip()
         # Clean up any potential markdown
         response_text = re.sub(r'^```json\s*', '', response_text)
         response_text = re.sub(r'\s*```$', '', response_text)
